@@ -44,6 +44,17 @@ return concat("INSERT INTO city VALUES (",
 
 ,
 
+(: Generating insert statements into the province table :)
+
+for $province in doc($file)/mondial/country/province
+return concat("INSERT INTO province VALUES (",
+	"name", $comma, "country", $comma,
+	"pop", $comma, "area", $comma,
+	"capital city", $comma, 
+	"capital province?", $closing, $nl)
+
+,
+
 (: Generating inserts into economy and population tables :)
 
 for $country in doc($file)/mondial/country
