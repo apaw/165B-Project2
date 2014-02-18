@@ -20,6 +20,7 @@ return concat("INSERT INTO country VALUES (",
 	$quote, $name, $quote, $comma, 
 	$quote, $code, $quote, $comma,
 	$quote, $capital, $quote, $comma,
+	"province of capital", $comma,
 	$area, $comma,
 	$pop, $closing, $nl)
 ,
@@ -36,6 +37,7 @@ for $city in doc($file)/mondial/country/city
 return concat("INSERT INTO city VALUES (",
 	$quote, $name, $quote, $comma,
 	$quote, $country, $quote, $comma,
+	"province", $comma,
 	$pop, $comma,
 	$long, $comma,
 	$lat, $closing, $nl)
@@ -67,6 +69,56 @@ return (concat("INSERT INTO economy VALUES (",
 
 ,
 
+(: Generating inserts into politics table :)
+
+for $country in doc($file)/mondial/country
+return concat("INSERT INTO politics VALUES (",
+	"country", $comma, "indep date", $comma,
+	"or depend country", $comma, 
+	"government", $closing, $nl)
+
+,
+
+(: Generating inserts into language table :)
+
+for $l in doc($file)/mondial/country/languages
+	let $country := $l/../name
+	let $name := $l/text()
+	let $percentage := $l/data(@percentage)	
+return concat("INSERT INTO language VALUES (",
+	$country, $comma, 
+	$name, $comma,
+	$percentage, $closing, $nl)
+
+,
+
+(: Generating inserts into religion table :)
+
+for $r in doc($file)/mondial/country/religions
+	let $country := $r/../name
+	let $name := $r/text()
+	let $percentage := $r/data(@percentage) 
+return concat("INSERT INTO religion VALUES (",
+	$country, $comma,
+	$name, $comma,
+	$percentage, $closing, $nl)
+
+,
+
+(: Generating inserts into ethic group table :)
+
+for $e in doc($file)/mondial/country/ethicgroups
+        let $country := $e/../name
+        let $name := $e/text()
+        let $percentage := $e/data(@percentage)
+return concat("INSERT INTO ethicgroup VALUES (",
+        $country, $comma, 
+	$name, $comma,
+        $percentage, $closing, $nl)
+
+,
+
+
 (: Generating inserts into continent table :)
 
 for $continent in doc($file)/mondial/continent
@@ -75,6 +127,28 @@ for $continent in doc($file)/mondial/continent
 return concat("INSERT INTO continent VALUES (",
 	$quote, $name, $quote, $comma,
 	$area, $closing, $nl)
+
+,
+
+(: Generating inserts into borders table :)
+
+for $country in doc($file)/mondial/country
+return concat("INSERT INTO borders VALUES (",
+	"country1", $comma, "country2", $comma,
+	"length", $closing, $nl)
+
+,
+
+(: Generating inserts into encompasses table :)
+
+for $c in doc($file)/mondial/country/encompassed
+	let $country := $c/../name
+	let $continent := $c/data(@continent)
+	let $percentage := $c/data(@percentage)
+return concat("INSERT INTO encompassses VALUES(",
+	$country, $comma,
+	$continent, $comma,
+	$percentage, $closing, $nl)
 
 ,
 
@@ -93,6 +167,15 @@ return concat("INSERT INTO organization VALUES (",
 	$quote, "null", $quote, $comma,
 	$quote, "null", $quote, $comma,
 	$establish, $closing, $nl)
+
+,
+
+(: Generatng inserts into isMember table :)
+
+for $member in doc($file)/mondial/organization/members
+return concat("INSERT INTO ismember VALUES (",
+	"country", $comma, "org", $comma,
+	"type", $closing, $nl)
 
 ,
 
@@ -176,3 +259,119 @@ for $sea in doc($file)/mondial/sea
 return concat("INSERT INTO sea VALUES (",
 	$quote, $name, $quote, $comma,
 	$depth, $closing, $nl)
+
+,
+
+(: Generating inserts into river table :)
+
+for $river in doc($file)/mondial/river
+	let $name := $river/name
+	let $length := $river/length
+return concat("INSERT INTO river VALUES (",
+	$quote, $name, $quote, $comma,
+	"river", $comma, "lake", $comma, "sea", $comma, 
+	$length, $comma,
+	"source coord", $comma, "mountains", $comma, 
+	"source alt", $comma, "estuary coord", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_desert table :)
+
+for $desert in doc($file)/mondial/desert
+return concat("INSERT INTO geo_desert VALUES (",
+	"desert", $comma, "country", $comma,
+	"province", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_river table :)
+
+for $river in doc($file)/mondial/river
+return concat("INSERT INTO geo_river VALUES (",
+        "river", $comma, "country", $comma,
+        "province", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_sea table :)
+
+for $sea in doc($file)/mondial/sea
+return concat("INSERT INTO geo_desert VALUES (",
+        "sea", $comma, "country", $comma,
+        "province", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_lake table :)
+
+for $lake in doc($file)/mondial/lake
+return concat("INSERT INTO geo_desert VALUES (",
+        "lake", $comma, "country", $comma,
+        "province", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_source table :)
+
+for $source in doc($file)/mondial/river
+return concat("INSERT INTO geo_source VALUES (",
+        "source", $comma, "country", $comma,
+        "province", $closing, $nl)
+
+,
+
+(: Generating inserts into geo_estuary table :)
+
+for $estuary in doc($file)/mondial/river
+return concat("INSERT INTO geo_estuary VALUES (",
+        "estuary", $comma, "country", $comma,
+        "province", $closing, $nl)
+
+,
+
+(: Generating inserts into mergeswith table :)
+
+for $s in doc($file)/mondial/sea
+return concat("INSERT INTO mergeswith VALUES (",
+        "sea1", $comma,
+        "sea2", $closing, $nl)
+
+,
+
+(: Generating inserts into located table :)
+
+for $l in doc($file)/mondial/city
+return concat("INSERT INTO located VALUES (",
+        "city", $comma, "province", $comma,
+        "country", $comma, "river", $comma,
+	"lake", $comma, "sea", $closing, $nl)
+
+,
+
+(: Generating inserts into locatedon table :)
+
+for $c in doc($file)/mondial/city
+return concat("INSERT INTO locatedon VALUES (",
+        "city", $comma, "province", $comma,
+        "country", $comma, 
+	"island", $closing, $nl)
+
+,
+
+(: Generating inserts into islandIn table :)
+
+for $i in doc($file)/mondial/island
+return concat("INSERT INTO islandin VALUES (",
+        "island", $comma, "sea", $comma,
+        "lake", $comma, 
+	"river", $closing, $nl)
+
+,
+
+(: Generating inserts into mountainOnIsland table :)
+
+for $m in doc($file)/mondial/mountain
+return concat("INSERT INTO mountainonisland VALUES (",
+        "mountain", $comma,
+        "island", $closing, $nl)
