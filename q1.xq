@@ -13,14 +13,16 @@ declare variable $file := "mondial.xml";
 for $country in doc($file)/mondial/country
 	let $name := $country/name
 	let $code := $country/data(@car_code)
-	let $capital := $country/data(@capital)
+	let $cc := $country//city[@is_country_cap = "yes"]
+	let $capital := $cc/name
+	let $province := $cc/../name (: mondial inserts name of country if province does not exist :)
 	let $area := $country/data(@area)
 	let $pop := $country/population
 return concat("INSERT INTO country VALUES (", 
 	$quote, $name, $quote, $comma, 
 	$quote, $code, $quote, $comma,
 	$quote, $capital, $quote, $comma,
-	"province of capital", $comma,
+	$quote, $province, $quote, $comma,
 	$area, $comma,
 	$pop, $closing, $nl)
 ,
@@ -28,32 +30,57 @@ return concat("INSERT INTO country VALUES (",
 (: Generating insert statements into the city table :)
 (: No provinces yet :)
 
-for $city in doc($file)/mondial/country/city
-	let $country := $city/../name
+for $city in doc($file)/mondial/country//city
+	let $country := $city/@country
 	let $name := $city/name
+	let $province := $city/../name (: mondial inserts name of country if province does not exist :)
 	let $pop := $city/population[1]
 	let $long := $city/longitude
 	let $lat := $city/latitude
 return concat("INSERT INTO city VALUES (",
 	$quote, $name, $quote, $comma,
 	$quote, $country, $quote, $comma,
-	"province", $comma,
+	$quote, $province, $quote, $comma,
 	$pop, $comma,
 	$long, $comma,
 	$lat, $closing, $nl)
-
 ,
 
 (: Generating insert statements into the province table :)
 
 for $province in doc($file)/mondial/country/province
+	let $name := $province/name
+	let $country := $province/@country
+	let $pop := $province/population[1]
+	let $area := $province/area
+	let $capital := $province/city[@is_state_cap = "yes"]/name
 return concat("INSERT INTO province VALUES (",
-	"name", $comma, "country", $comma,
-	"pop", $comma, "area", $comma,
-	"capital city", $comma, 
-	"capital province?", $closing, $nl)
+	$quote, $name, $quote, $comma,
+	$quote, $country, $quote, $comma,
+	$pop, $comma,
+	$area, $comma,
+	$quote, $capital, $quote, $comma,
+	$quote, $name, $quote, $comma, $closing, $nl) (: for some reason it seems that capProv == province name :)
+,
+
+(: countries without any provinces also go into the province table. Out of order with example output :)
+
+for $country in doc($file)/mondial/country[@car_code != doc($file)/mondial/country/province[@country]]
+	let $name := $country/name
+	let $cc := $country/@car_code
+	let $pop := $country/population[1]
+	let $area := $country/area
+	let $capital := $country/city[@is_country_cap = "yes"]/name
+return concat("INSERT INTO province VALUES (",
+	$quote, $name, $quote, $comma,
+	$quote, $cc, $quote, $comma,
+	$pop, $comma,
+	$area, $comma,
+	$quote, $capital, $quote, $comma,
+	$quote, $name, $quote, $comma, $closing, $nl) 
 
 ,
+
 
 (: Generating inserts into economy and population tables :)
 
