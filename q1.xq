@@ -13,14 +13,16 @@ declare variable $file := "mondial.xml";
 for $country in doc($file)/mondial/country
 	let $name := $country/name
 	let $code := $country/data(@car_code)
-	let $capital := $country/data(@capital)
+	let $cc := $country//city[@is_country_cap = "yes"]
+	let $capital := $cc/name
+	let $province := $cc/../name (: mondial inserts name of country if province does not exist :)
 	let $area := $country/data(@area)
 	let $pop := $country/population
 return concat("INSERT INTO country VALUES (", 
 	$quote, $name, $quote, $comma, 
 	$quote, $code, $quote, $comma,
 	$quote, $capital, $quote, $comma,
-	"province of capital", $comma,
+	$quote, $province, $quote, $comma,
 	$area, $comma,
 	$pop, $closing, $nl)
 ,
@@ -28,32 +30,57 @@ return concat("INSERT INTO country VALUES (",
 (: Generating insert statements into the city table :)
 (: No provinces yet :)
 
-for $city in doc($file)/mondial/country/city
-	let $country := $city/../name
+for $city in doc($file)/mondial/country//city
+	let $country := $city/@country
 	let $name := $city/name
+	let $province := $city/../name (: mondial inserts name of country if province does not exist :)
 	let $pop := $city/population[1]
 	let $long := $city/longitude
 	let $lat := $city/latitude
 return concat("INSERT INTO city VALUES (",
 	$quote, $name, $quote, $comma,
 	$quote, $country, $quote, $comma,
-	"province", $comma,
+	$quote, $province, $quote, $comma,
 	$pop, $comma,
 	$long, $comma,
 	$lat, $closing, $nl)
-
 ,
 
 (: Generating insert statements into the province table :)
 
 for $province in doc($file)/mondial/country/province
+	let $name := $province/name
+	let $country := $province/@country
+	let $pop := $province/population[1]
+	let $area := $province/area
+	let $capital := $province/city[@is_state_cap = "yes"]/name
 return concat("INSERT INTO province VALUES (",
-	"name", $comma, "country", $comma,
-	"pop", $comma, "area", $comma,
-	"capital city", $comma, 
-	"capital province?", $closing, $nl)
+	$quote, $name, $quote, $comma,
+	$quote, $country, $quote, $comma,
+	$pop, $comma,
+	$area, $comma,
+	$quote, $capital, $quote, $comma,
+	$quote, $name, $quote, $comma, $closing, $nl) (: for some reason it seems that capProv == province name :)
+,
+
+(: countries without any provinces also go into the province table. Out of order with example output :)
+
+for $country in doc($file)/mondial/country[@car_code != doc($file)/mondial/country/province[@country]]
+	let $name := $country/name
+	let $cc := $country/@car_code
+	let $pop := $country/population[1]
+	let $area := $country/area
+	let $capital := $country/city[@is_country_cap = "yes"]/name
+return concat("INSERT INTO province VALUES (",
+	$quote, $name, $quote, $comma,
+	$quote, $cc, $quote, $comma,
+	$pop, $comma,
+	$area, $comma,
+	$quote, $capital, $quote, $comma,
+	$quote, $name, $quote, $comma, $closing, $nl) 
 
 ,
+
 
 (: Generating inserts into economy and population tables :)
 
@@ -83,10 +110,15 @@ return (concat("INSERT INTO economy VALUES (",
 (: Generating inserts into politics table :)
 
 for $country in doc($file)/mondial/country
+	let $cc := $country/@car_code
+	let $indep := $country/indep_date
+	let $depend := $country/dependent/@country
+	let $gov := $country/government
 return concat("INSERT INTO politics VALUES (",
-	"country", $comma, "indep date", $comma,
-	"or depend country", $comma, 
-	"government", $closing, $nl)
+	$quote, $cc, $quote, $comma,
+	$quote, $indep, $quote, $comma,
+	$quote, $depend, $quote, $comma, 
+	$quote, $gov, $quote, $comma, $closing, $nl)
 
 ,
 
@@ -143,10 +175,14 @@ return concat("INSERT INTO continent VALUES (",
 
 (: Generating inserts into borders table :)
 
-for $country in doc($file)/mondial/country
+for $border in doc($file)/mondial/country/border
+	let $country1 := $border/../@car_code
+	let $country2 := $border/@country
+	let $length := $border/@length
 return concat("INSERT INTO borders VALUES (",
-	"country1", $comma, "country2", $comma,
-	"length", $closing, $nl)
+	$quote, $country1, $quote, $comma,
+	$quote, $country2, $quote, $comma,
+	$quote, $length, $quote, $closing, $nl)
 
 ,
 
@@ -184,6 +220,7 @@ return concat("INSERT INTO organization VALUES (",
 (: Generatng inserts into isMember table :)
 
 for $member in doc($file)/mondial/organization/members
+
 return concat("INSERT INTO ismember VALUES (",
 	"country", $comma, "org", $comma,
 	"type", $closing, $nl)
@@ -278,48 +315,119 @@ return concat("INSERT INTO sea VALUES (",
 for $river in doc($file)/mondial/river
 	let $name := $river/name
 	let $length := $river/length
+	let $toriver := doc($file)/mondial/river[@id = $river/to[@watertype = "river"]/@water]/name
+	let $lake := doc($file)/mondial/lake[@id = $river/to[@watertype = "lake"]/@water]/name
+	let $sea := doc($file)/mondial/sea[@id = $river/to[@watertype = "sea"]/@water]/name
+	let $slong := $river/source/longitude
+	let $slat := $river/source/latitude
+	let $mountains := $river/source/mountains
+	let $alt := $river/source/elevation
+	let $elong := $river/estuary/longitude
+	let $elat := $river/estuary/latitude
+
 return concat("INSERT INTO river VALUES (",
 	$quote, $name, $quote, $comma,
-	"river", $comma, "lake", $comma, "sea", $comma, 
-	$length, $comma,
-	"source coord", $comma, "mountains", $comma, 
-	"source alt", $comma, "estuary coord", $closing, $nl)
-
+	$quote, $toriver, $quote, $comma, 
+	$quote, $lake, $quote, $comma, 
+	$quote, $sea, $quote, $comma, 
+	$quote, $length, $quote, $comma,
+	"ROW(", $slong, $comma, $slat, ")", $comma,
+	$quote, $mountains, $quote, $comma,
+	$quote, $alt, $quote, $comma,
+	"ROW(", $elong, $comma, $elat, ")", $closing, $nl)
 ,
 
 (: Generating inserts into geo_desert table :)
 
 for $desert in doc($file)/mondial/desert
-return concat("INSERT INTO geo_desert VALUES (",
-	"desert", $comma, "country", $comma,
-	"province", $closing, $nl)
-
+	let $name := $desert/name
+for $cid in $desert/tokenize(@country, '\s+')
+	let $country := doc(@file)//country[@car_code = $cid]/name
+	let $provids := $desert/located[@country = $cid]/@province
+	return
+	if(string-length($provids) = 0) then 
+		concat("INSERT INTO geo_desert VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $cid, $quote, $closing, $nl)
+	else
+		let $provid := tokenize($provids, '\s+')
+	for $provid in $provid
+		let $province := doc(@file)/mondial/country/province[@id = $provid]/name
+		return concat("INSERT INTO geo_desert VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $provid, $quote, $closing, $nl)
 ,
 
 (: Generating inserts into geo_river table :)
-
+	
 for $river in doc($file)/mondial/river
-return concat("INSERT INTO geo_river VALUES (",
-        "river", $comma, "country", $comma,
-        "province", $closing, $nl)
+	let $name := $river/name
+for $cid in $river/tokenize(@country, '\s+')
+	let $country := doc(@file)//country[@car_code = $cid]/name
+	let $provids := $river/located[@country = $cid]/@province
+	return
+	if(string-length($provids) = 0) then 
+		concat("INSERT INTO geo_river VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $cid, $quote, $closing, $nl)
+	else
+	let $provid := tokenize($provids, '\s+')
+for $provid in $provid
+	let $province := doc(@file)//province[@id = $provid]/name
+	return concat("INSERT INTO geo_river VALUES (",
+     $quote, $name, $quote, $comma,
+     $quote, $cid, $quote, $comma,
+     $quote, $provid, $quote, $closing, $nl)
 
 ,
 
 (: Generating inserts into geo_sea table :)
 
 for $sea in doc($file)/mondial/sea
-return concat("INSERT INTO geo_desert VALUES (",
-        "sea", $comma, "country", $comma,
-        "province", $closing, $nl)
-
+	let $name := $sea/name
+for $cid in $sea/tokenize(@country, '\s+')
+	let $country := doc(@file)//country[@car_code = $cid]/name
+	let $provids := $sea/located[@country = $cid]/@province
+	return
+	if(string-length($provids) = 0) then 
+		concat("INSERT INTO geo_sea VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $cid, $quote, $closing, $nl)
+	else
+	let $provid := tokenize($provids, '\s+')
+for $provid in $provid
+	let $province := doc(@file)//province[@id = $provid]/name
+	return concat("INSERT INTO geo_sea VALUES (",
+     $quote, $name, $quote, $comma,
+     $quote, $cid, $quote, $comma,
+     $quote, $provid, $quote, $closing, $nl)
 ,
 
 (: Generating inserts into geo_lake table :)
 
 for $lake in doc($file)/mondial/lake
-return concat("INSERT INTO geo_desert VALUES (",
-        "lake", $comma, "country", $comma,
-        "province", $closing, $nl)
+	let $name := $lake/name
+for $cid in $lake/tokenize(@country, '\s+')
+	let $country := doc(@file)//country[@car_code = $cid]/name
+	let $provids := $lake/located[@country = $cid]/@province
+	return
+	if(string-length($provids) = 0) then 
+		concat("INSERT INTO geo_lake VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $cid, $quote, $closing, $nl)
+	else
+	let $provid := tokenize($provids, '\s+')
+for $provid in $provid
+	let $province := doc(@file)//province[@id = $provid]/name
+	return concat("INSERT INTO geo_lake VALUES (",
+     $quote, $name, $quote, $comma,
+     $quote, $cid, $quote, $comma,
+     $quote, $provid, $quote, $closing, $nl)
 
 ,
 
@@ -334,40 +442,71 @@ return concat("INSERT INTO geo_source VALUES (",
 
 (: Generating inserts into geo_estuary table :)
 
-for $estuary in doc($file)/mondial/river
-return concat("INSERT INTO geo_estuary VALUES (",
-        "estuary", $comma, "country", $comma,
-        "province", $closing, $nl)
-
+for $river in doc($file)/mondial/river
+	let $name := $river/name
+	let $estuary := $river/estuary
+for $cid in $estuary/tokenize(@country, '\s+')
+	let $country := doc(@file)//country[@car_code = $cid]/name
+	let $provids := $estuary/located[@country = $cid]/@province
+	return
+	if(string-length($provids) = 0) then 
+		concat("INSERT INTO geo_estuary VALUES (",
+		$quote, $name, $quote, $comma, 
+		$quote, $cid, $quote, $comma, 
+		$quote, $cid, $quote, $closing, $nl)
+	else
+	let $provid := tokenize($provids, '\s+')
+for $provid in $provid
+	let $province := doc(@file)//province[@id = $provid]/name
+	return concat("INSERT INTO geo_estuary VALUES (",
+     $quote, $name, $quote, $comma,
+     $quote, $cid, $quote, $comma,
+     $quote, $provid, $quote, $closing, $nl)
 ,
 
 (: Generating inserts into mergeswith table :)
 
 for $s in doc($file)/mondial/sea
-return concat("INSERT INTO mergeswith VALUES (",
-        "sea1", $comma,
-        "sea2", $closing, $nl)
-
+	let $s1 := $s/name
+	for $s2id in tokenize($s/@bordering, '\s+')
+	let $s2 := doc($file)/mondial/sea[@id = $s2id]/name
+	return concat("INSERT INTO mergeswith VALUES (",
+        $quote, $s1, $quote, $comma,
+        $quote, $s2, $quote, $closing, $nl)
 ,
 
 (: Generating inserts into located table :)
 
-for $l in doc($file)/mondial/city
-return concat("INSERT INTO located VALUES (",
-        "city", $comma, "province", $comma,
-        "country", $comma, "river", $comma,
-	"lake", $comma, "sea", $closing, $nl)
+for $l in doc($file)/mondial//city/located_at
+	let $name := $l/../name
+	let $province := $l/../../name
+	let $country := $l/../@country
+	let $river := doc($file)/mondial/river[@id = $l/@river]/name
+	let $lake := doc($file)/mondial/lake[@id = $l/@lake]/name
+	let $sea := doc($file)/mondial/sea[@id = $l/@sea]/name 
 
+return concat("INSERT INTO located VALUES (", 
+	$quote, $name, $quote, $comma, 
+	$quote, $province, $quote, $comma, 
+	$quote, $country, $quote, $comma, 
+	$quote, $river, $quote, $comma, 
+	$quote, $lake, $quote, $comma, 
+	$quote, $sea, $quote, $closing, $nl) 
 ,
 
 (: Generating inserts into locatedon table :)
 
-for $c in doc($file)/mondial/city
-return concat("INSERT INTO locatedon VALUES (",
-        "city", $comma, "province", $comma,
-        "country", $comma, 
-	"island", $closing, $nl)
+for $l in doc($file)/mondial//city/located_on
+	let $name := $l/../name
+	let $province := $l/../../name
+	let $country := $l/../@country
+	let $island := doc($file)//island[@id = $l/@island]/name
 
+return concat("INSERT INTO locatedOn VALUES (",
+	$quote, $name, $quote, $comma,
+	$quote, $province, $quote, $comma,
+	$quote, $country, $quote, $comma,
+	$quote, $island, $quote, $closing, $nl)
 ,
 
 (: Generating inserts into islandIn table :)
@@ -382,7 +521,13 @@ return concat("INSERT INTO islandin VALUES (",
 
 (: Generating inserts into mountainOnIsland table :)
 
-for $m in doc($file)/mondial/mountain
-return concat("INSERT INTO mountainonisland VALUES (",
-        "mountain", $comma,
-        "island", $closing, $nl)
+for $m in doc($file)//mountain
+	let $mountain := $m/name
+	let $iID := $m/@island
+	return 
+	if(string-length($mountain) > 0 and string-length($iID) > 0 ) then
+		let $island := doc($file)//island[@id = $iID]/name
+		return concat("INSERT INTO mountainOnIsland VALUES (",
+		$quote, $mountain, $quote, $comma,
+		$quote, $island, $quote, $closing, $nl)
+	else ()
