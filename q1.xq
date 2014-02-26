@@ -52,7 +52,7 @@ for $province in doc($file)/mondial/country/province
 	let $country := $province/@country
 	let $pop := $province/population[1]
 	let $area := 
-		if (empty($province/area)) then "null"
+		if (empty($province/area)) then "NULL"
 		else $province/area
 	let $capital := $province/city[@is_state_cap = "yes"]/name
 return concat("INSERT INTO province VALUES (",
@@ -62,7 +62,7 @@ return concat("INSERT INTO province VALUES (",
 	$area, $comma,
 	$quote, $capital, $quote, $comma,
 	$quote, $name, $quote, $closing, $nl) (: for some reason it seems that capProv == province name :)
-,
+,nu
 
 (: countries without any provinces also go into the province table. Out of order with example output :)
 
@@ -71,7 +71,7 @@ for $country in doc($file)/mondial/country[@car_code != doc($file)/mondial/count
 	let $cc := $country/@car_code
 	let $pop := $country/population[1]
 	let $area := 
-		if (empty($country/area)) then "null"
+		if (empty($country/area)) then "NULL"
 		else $country/area
 	let $capital := $country/city[@is_country_cap = "yes"]/name
 return concat("INSERT INTO province VALUES (",
@@ -91,25 +91,25 @@ for $country in doc($file)/mondial/country
 	let $name := $country/name
 	let $gdpA := $country/gdp_total
 	let $gdp := 
-		if (empty($country/gdp_total)) then "null"
+		if (empty($country/gdp_total)) then "NULL"
 		else $country/gdp_total
 	let $agri :=
-		if (empty($country/gdp_agri)) then "null"
+		if (empty($country/gdp_agri)) then "NULL"
 		else $country/gdp_agri
 	let $service :=
-		if (empty($country/gdp_serv)) then "null"
+		if (empty($country/gdp_serv)) then "NULL"
 		else $country/gdp_serv
 	let $industry :=
-		if (empty($country/gdp_ind)) then "null"
+		if (empty($country/gdp_ind)) then "NULL"
 		else $country/gdp_ind
 	let $inflation :=
-		if (empty($country/inflation)) then "null"
+		if (empty($country/inflation)) then "NULL"
 		else $country/inflation
 	let $pop_grow :=
-		if (empty($country/population_growth)) then "null"
+		if (empty($country/population_growth)) then "NULL"
 		else $country/population_growth
 	let $infant_mort :=
-		if (empty($country/infant_mortality)) then "null"
+		if (empty($country/infant_mortality)) then "NULL"
 		else $country/infant_mortality
 return (concat("INSERT INTO economy VALUES (",
 	$quote, $name, $quote, $comma,
@@ -130,13 +130,13 @@ return (concat("INSERT INTO economy VALUES (",
 for $country in doc($file)/mondial/country
 	let $cc := $country/@car_code
 	let $indep := 
-		if (empty($country/indep_date)) then "null"
+		if (empty($country/indep_date)) then "NULL"
 		else concat($quote, $country/indep_date, $quote)
 	let $depend := 
-		if (empty($country/dependent/@country)) then "null"
+		if (empty($country/dependent/@country)) then "NULL"
 		else concat($quote, $country/dependent/@country, $quote)
 	let $gov := 
-		if (empty($country/government)) then "null"
+		if (empty($country/government)) then "NULL"
 		else concat($quote, $country/government, $quote)
 return concat("INSERT INTO politics VALUES (",
 	$quote, $cc, $quote, $comma,
@@ -232,13 +232,13 @@ for $org in doc($file)/mondial/organization
 	let $hq := $org/data(@headq)
 	let $cityA := doc($file)/mondial//city[@id = $hq]
 	let $city :=
-		if (string-length($cityA) = 0) then "null"
+		if (string-length($cityA) = 0) then "NULL"
 		else concat($quote, $cityA/name, $quote)
 	let $country := 
-		if (empty($cityA/@country)) then "null"
+		if (empty($cityA/@country)) then "NULL"
 		else concat($quote, $cityA/@country, $quote)
 	let $province := 
-		if (empty($cityA/../name)) then "null"
+		if (empty($cityA/../name)) then "NULL"
 		else concat($quote, $cityA/../name, $quote)
 	let $establish := $org/established
 return concat("INSERT INTO organization VALUES (",
@@ -353,43 +353,43 @@ return concat("INSERT INTO sea VALUES (",
 for $river in doc($file)/mondial/river
 	let $name := $river/name
 	let $length := 
-		if (empty($river/length)) then "null"
+		if (empty($river/length)) then "NULL"
 		else $river/length
 	let $toriverA := doc($file)/mondial/river[@id = $river/to[@watertype = "river"]/@water]/name
 	let $toriver :=
-		if (string-length($toriverA) = 0) then "null"
+		if (string-length($toriverA) = 0) then "NULL"
 		else concat($quote, $toriverA, $quote)
 	let $lakeA := doc($file)/mondial/lake[@id = $river/to[@watertype = "lake"]/@water]/name
 	let $lake :=
-		if (string-length($lakeA) = 0) then "null"
+		if (string-length($lakeA) = 0) then "NULL"
 		else concat($quote, $lakeA, $quote)
 	let $seaA := doc($file)/mondial/sea[@id = $river/to[@watertype = "sea"]/@water]/name
 	let $sea := 
-		if (string-length($seaA) = 0) then "null"
+		if (string-length($seaA) = 0) then "NULL"
 		else concat($quote, $seaA, $quote)
 	let $slong := 
-		if (empty($river/source/longitude)) then "null"
+		if (empty($river/source/longitude)) then "NULL"
 		else $river/source/longitude
 	let $slat := 
-		if (empty($river/source/latitude)) then "null"
+		if (empty($river/source/latitude)) then "NULL"
 		else $river/source/latitude
 	let $scoord := 
-		if ($slong = "null" and $slat = "null") then "null"
+		if ($slong = "NULL" and $slat = "NULL") then "NULL"
 		else concat("GeoCoord(", $slong, $comma, $slat, ")")
 	let $mountains := 
-		if (empty($river/source/mountains)) then "null"
+		if (empty($river/source/mountains)) then "NULL"
 		else $river/source/mountains
 	let $alt := 
-		if (empty($river/source/elevation)) then "null"
+		if (empty($river/source/elevation)) then "NULL"
 		else $river/source/elevation
 	let $elong := 
-		if (empty($river/estuary/longitude)) then "null"
+		if (empty($river/estuary/longitude)) then "NULL"
 		else $river/estuary/longitude
 	let $elat := 
-		if (empty($river/estuary/latitude)) then "null"
+		if (empty($river/estuary/latitude)) then "NULL"
 		else $river/estuary/latitude
 	let $ecoord := 
-		if ($elong = "null" and $elat = "null") then "null"
+		if ($elong = "null" and $elat = "NULL") then "NULL"
 		else concat("GeoCoord(", $elong, $comma, $elat, ")")
 
 return concat("INSERT INTO river VALUES (",
@@ -569,15 +569,15 @@ for $l in $f/mondial//city/located_at
 	let $country := $l/../@country
 	let $riverA := $f/mondial/river[@id = $l/@river]/name
 	let $river :=
-		if (string-length($riverA) = 0) then "null"
+		if (string-length($riverA) = 0) then "NULL"
 		else concat($quote, $riverA, $quote)
 	let $lakeA := $f/mondial/lake[@id = $l/@lake]/name
 	let $lake :=
-		if (string-length($lakeA) = 0) then "null"
+		if (string-length($lakeA) = 0) then "NULL"
 		else concat($quote, $lakeA, $quote)
 	let $seaA := $f/mondial/sea[@id = $l/@sea]/name 
 	let $sea :=
-		if (string-length($seaA) = 0) then "null"
+		if (string-length($seaA) = 0) then "NULL"
 		else concat($quote, $seaA, $quote)
 
 return concat("INSERT INTO located VALUES (", 
@@ -611,15 +611,15 @@ for $i in $f/mondial/island
 	let $name := $i/name
 	let $seaID := $i/@sea
 	let $sea := 
-		if (string-length($seaID) = 0) then "null"
+		if (string-length($seaID) = 0) then "NULL"
 		else concat($quote, $f//sea[@id = $seaID]/name, $quote)
 	let $lakeID := $i/@lake
 	let $lake :=
-		if (string-length($lakeID) = 0) then "null"
+		if (string-length($lakeID) = 0) then "NULL"
 		else concat($quote, $f//lake[@id = $lakeID]/name, $quote)
 	let $riverID := $i/@river
 	let $river := 
-		if (string-length($riverID) = 0) then "null"
+		if (string-length($riverID) = 0) then "NULL"
 		else concat($quote, $f//river[@id = $riverID]/name, $quote)
 return concat("INSERT INTO islandin VALUES (",
         $quote, $name, $quote, $comma, 
