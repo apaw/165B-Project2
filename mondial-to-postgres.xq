@@ -8,7 +8,6 @@ declare variable $closing := ");";
 declare variable $file := "mondial.xml";
 
 (: Generating insert statements into the country table :)
-(: Currently uses city_id for capital and no provinces :)
 
 for $country in doc($file)/mondial/country
 	let $name := $country/name
@@ -71,23 +70,36 @@ for $province in doc($file)/mondial/country/province
 	let $area := 
 		if (empty($province/area)) then "NULL"
 		else $province/area
-	let $cap := $province/city[@is_state_cap = "yes"]
-	let $capital := 
-		if (string-length($cap) = 0) then $name
-		else $cap/name
-return concat("INSERT INTO province VALUES (",
-	$quote, $name, $quote, $comma,
-	$quote, $country, $quote, $comma,
-	$pop, $comma,
-	$area, $comma,
-	$quote, $capital, $quote, $comma,
-	$quote, $name, $quote, $closing, $nl) (: for some reason it seems that capProv == province name :)
+	let $c := $province/data(@capital)
+        let $cap := $province/..//city[@id = $c]
+        let $capital :=
+        	if (string-length($cap) = 0) then $name
+                else $cap/name
+        let $capprov := $cap/../name
+	return 
+	if (empty($province/data(@capital))) then
+		concat("INSERT INTO province VALUES (",
+        	$quote, $name, $quote, $comma,
+        	$quote, $country, $quote, $comma,
+       		$pop, $comma,
+        	$area, $comma,
+        	"NULL", $comma,
+        	"NULL", $closing, $nl)
+	else concat("INSERT INTO province VALUES (",
+		$quote, $name, $quote, $comma,
+		$quote, $country, $quote, $comma,
+		$pop, $comma,
+		$area, $comma,
+		$quote, $capital, $quote, $comma,
+		$quote, $capprov, $quote, $closing, $nl) (: for some reason it seems that capProv == province name :)
 
 ,
 
 (: countries without any provinces also go into the province table. Out of order with example output :)
 
-for $country in doc($file)/mondial/country[@car_code != doc($file)/mondial/country/province[@country]]
+(:for $country in doc($file)/mondial/country[@car_code != doc($file)/mondial/country/province[@country]]:)
+for $c in doc($file)/mondial/country/city (: if it follows this format cities are not encapsulated by provinces :)
+	let $country := $c/..
 	let $name := $country/name
 	let $cc := $country/@car_code
         let $pop :=
@@ -116,7 +128,7 @@ return concat("INSERT INTO province VALUES (",
 (: Generating inserts into economy and population tables :)
 
 for $country in doc($file)/mondial/country
-	let $name := $country/name
+	let $name := $country/data(@car_code)
 	let $gdpA := $country/gdp_total
 	let $gdp := 
 		if (empty($country/gdp_total)) then "NULL"
@@ -177,7 +189,7 @@ return concat("INSERT INTO politics VALUES (",
 (: Generating inserts into language table :)
 
 for $l in doc($file)/mondial/country/languages
-	let $country := $l/../name
+	let $country := $l/../data(@car_code)
 	let $name := $l/text()
 	let $percentage := $l/data(@percentage)	
 return concat("INSERT INTO language VALUES (",
@@ -190,7 +202,7 @@ return concat("INSERT INTO language VALUES (",
 (: Generating inserts into religion table :)
 
 for $r in doc($file)/mondial/country/religions
-	let $country := $r/../name
+	let $country := $r/../data(@car_code)
 	let $name := $r/text()
 	let $percentage := $r/data(@percentage) 
 return concat("INSERT INTO religion VALUES (",
@@ -203,7 +215,7 @@ return concat("INSERT INTO religion VALUES (",
 (: Generating inserts into ethic group table :)
 
 for $e in doc($file)/mondial/country/ethicgroups
-        let $country := $e/../name
+        let $country := $e/../data(@car_code)
         let $name := $e/text()
         let $percentage := $e/data(@percentage)
 return concat("INSERT INTO ethicgroup VALUES (",
@@ -241,18 +253,17 @@ return concat("INSERT INTO borders VALUES (",
 (: Generating inserts into encompasses table :)
 
 for $c in doc($file)/mondial/country/encompassed
-	let $country := $c/../name
+	let $country := $c/../data(@car_code)
 	let $continent := $c/data(@continent)
 	let $percentage := $c/data(@percentage)
-return concat("INSERT INTO encompassses VALUES(",
-	$country, $comma,
-	$continent, $comma,
+return concat("INSERT INTO encompasses VALUES(",
+	$quote, $country, $quote, $comma,
+	$quote, $continent, $quote, $comma,
 	$percentage, $closing, $nl)
 
 ,
 
 (: Generating inserts into organization table :)
-(: only takes city id, xml does not have country and province info :)
 
 for $org in doc($file)/mondial/organization
 	let $abbrev := $org/abbrev
@@ -321,7 +332,7 @@ for $mountain in doc($file)/mondial/mountain
                 else $mountain/latitude
         let $coord :=
                 if ($lat = "NULL" and $long = "NULL") then "NULL"
-                else concat("GeoCoord(", $long, $comma, $lat, ")")
+                else concat("ROW(", $long, $comma, $lat, ")")
 return concat("INSERT INTO mountain VALUES (",
 	$quote, $name, $quote, $comma,
 	$mountains, $comma,
@@ -346,7 +357,7 @@ for $desert in doc($file)/mondial/desert
                 else $desert/latitude
         let $coord :=
                 if ($lat = "NULL" and $long = "NULL") then "NULL"
-                else concat("GeoCoord(", $long, $comma, $lat, ")")
+                else concat("ROW(", $long, $comma, $lat, ")")
 return concat("INSERT INTO desert VALUES (",
 	$quote, $name, $quote, $comma,
 	$area, $comma, 
@@ -379,7 +390,7 @@ for $island in doc($file)/mondial/island
 		else $island/latitude
 	let $coord := 
 		if ($lat = "NULL" and $long = "NULL") then "NULL"
-		else concat("GeoCoord(", $long, $comma, $lat, ")")
+		else concat("ROW(", $long, $comma, $lat, ")")
 return concat("INSERT INTO island VALUES (",
 	$quote, $name, $quote, $comma,
 	$islands, $comma,
@@ -407,6 +418,12 @@ for $lake in doc($file)/mondial/lake
         let $type :=
                 if (string-length($typeA) = 0) then "NULL"
                 else concat($quote, $typeA, $quote)
+	let $to := $lake/to/data(@watertype)
+	let $water := $lake/to/data(@water)
+	let $river :=
+		if ($to = "river") then
+			concat($quote, doc($file)/mondial/river[@id = $water]/name, $quote)
+		else "NULL"
         let $long :=
                 if (empty($lake/longitude)) then "NULL"
                 else $lake/longitude
@@ -415,13 +432,14 @@ for $lake in doc($file)/mondial/lake
                 else $lake/latitude
         let $coord :=
                 if ($lat = "NULL" and $long = "NULL") then "NULL"
-                else concat("GeoCoord(", $long, $comma, $lat, ")")
+                else concat("ROW(", $long, $comma, $lat, ")")
 return concat("INSERT INTO lake VALUES (",
 	$quote, $name, $quote, $comma,
 	$area, $comma,
 	$depth, $comma,
 	$altitude, $comma,
 	$type, $comma,
+	$river, $comma,
 	$coord, $closing, $nl)
 
 ,
@@ -466,10 +484,10 @@ for $river in doc($file)/mondial/river
 		else $river/source/latitude
 	let $scoord := 
 		if ($slong = "NULL" and $slat = "NULL") then "NULL"
-		else concat("GeoCoord(", $slong, $comma, $slat, ")")
+		else concat("ROW(", $slong, $comma, $slat, ")")
 	let $mountains := 
 		if (empty($river/source/mountains)) then "NULL"
-		else $river/source/mountains
+		else concat($quote, $river/source/mountains, $quote)
 	let $alt := 
 		if (empty($river/source/elevation)) then "NULL"
 		else $river/source/elevation
@@ -481,17 +499,17 @@ for $river in doc($file)/mondial/river
 		else $river/estuary/latitude
 	let $ecoord := 
 		if ($elong = "null" and $elat = "NULL") then "NULL"
-		else concat("GeoCoord(", $elong, $comma, $elat, ")")
+		else concat("ROW(", $elong, $comma, $elat, ")")
 
 return concat("INSERT INTO river VALUES (",
 	$quote, $name, $quote, $comma,
 	$toriver, $comma,
 	$lake, $comma, 
 	$sea, $comma, 
-	$quote, $length, $quote, $comma,
+	$length, $comma,
 	$scoord, $comma,
-	$quote, $mountains, $quote, $comma,
-	$quote, $alt, $quote, $comma,
+	$mountains, $comma,
+	$alt, $comma,
 	$ecoord, $closing, $nl)
 ,
 
@@ -577,7 +595,7 @@ for $cid in $lake/tokenize(@country, '\s+')
 		concat("INSERT INTO geo_lake VALUES (",
 		$quote, $name, $quote, $comma, 
 		$quote, $cid, $quote, $comma, 
-		$quote, $cid, $quote, $closing, $nl)
+		$quote, $country, $quote, $closing, $nl)
 	else
 	let $provid := tokenize($provids, '\s+')
 for $p in $provid
