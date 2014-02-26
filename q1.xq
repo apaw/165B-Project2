@@ -62,7 +62,8 @@ return concat("INSERT INTO province VALUES (",
 	$area, $comma,
 	$quote, $capital, $quote, $comma,
 	$quote, $name, $quote, $closing, $nl) (: for some reason it seems that capProv == province name :)
-,nu
+
+,
 
 (: countries without any provinces also go into the province table. Out of order with example output :)
 
