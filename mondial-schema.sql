@@ -1,18 +1,18 @@
 
 CREATE TABLE Country
-(Name VARCHAR(35) NOT NULL UNIQUE,
+(Name VARCHAR(50) NOT NULL UNIQUE,
  Code VARCHAR(4) CONSTRAINT CountryKey PRIMARY KEY,
- Capital VARCHAR(35),
- Province VARCHAR(35),
+ Capital VARCHAR(50),
+ Province VARCHAR(50),
  Area NUMERIC CONSTRAINT CountryArea
    CHECK (Area >= 0),
  Population NUMERIC CONSTRAINT CountryPop
    CHECK (Population >= 0));
 
 CREATE TABLE City
-(Name VARCHAR(35),
+(Name VARCHAR(50),
  Country VARCHAR(4),
- Province VARCHAR(35),
+ Province VARCHAR(50),
  Population NUMERIC CONSTRAINT CityPop
    CHECK (Population >= 0),
  Longitude NUMERIC CONSTRAINT CityLon
@@ -22,15 +22,15 @@ CREATE TABLE City
  CONSTRAINT CityKey PRIMARY KEY (Name, Country, Province));
 
 CREATE TABLE Province
-(Name VARCHAR(35) CONSTRAINT PrName NOT NULL ,
+(Name VARCHAR(50) CONSTRAINT PrName NOT NULL ,
  Country  VARCHAR(4) CONSTRAINT PrCountry NOT NULL
    REFERENCES Country DEFERRABLE INITIALLY DEFERRED,
  Population NUMERIC CONSTRAINT PrPop
    CHECK (Population >= 0),
  Area NUMERIC CONSTRAINT PrAr
    CHECK (Area >= 0),
- Capital VARCHAR(35),
- CapProv VARCHAR(35),
+ Capital VARCHAR(50),
+ CapProv VARCHAR(50),
  CONSTRAINT PrKey PRIMARY KEY (Name, Country));
 
 ALTER TABLE Country
@@ -118,9 +118,9 @@ CREATE TABLE encompasses
 CREATE TABLE Organization
 (Abbreviation VARCHAR(12) PRIMARY KEY,
  Name VARCHAR(80) NOT NULL,
- City VARCHAR(35) ,
+ City VARCHAR(50) ,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  Established DATE,
  CONSTRAINT OrgNameUnique UNIQUE (Name),
  CONSTRAINT City_FKey FOREIGN KEY (City, Country, Province)
@@ -140,7 +140,7 @@ CREATE TABLE Mountain
 (Name VARCHAR(35) CONSTRAINT MountainKey PRIMARY KEY,
  Mountains VARCHAR(35),
  Height NUMERIC,
- Type VARCHAR(10),
+ Type VARCHAR(20),
  Coordinates GeoCoord CONSTRAINT MountainCoord
      CHECK (((Coordinates).Longitude >= -180) AND
             ((Coordinates).Longitude <= 180) AND
@@ -161,7 +161,7 @@ CREATE TABLE Island
  Islands VARCHAR(35),
  Area NUMERIC CONSTRAINT IslandAr check (Area >= 0),
  Height NUMERIC,
- Type VARCHAR(10),
+ Type VARCHAR(20),
  Coordinates GeoCoord CONSTRAINT IslandCoord
      CHECK (((Coordinates).Longitude >= -180) AND
             ((Coordinates).Longitude <= 180) AND
@@ -173,7 +173,7 @@ CREATE TABLE Lake
  Area NUMERIC CONSTRAINT LakeAr CHECK (Area >= 0),
  Depth NUMERIC CONSTRAINT LakeDpth CHECK (Depth >= 0),
  Altitude NUMERIC,
- Type VARCHAR(10),
+ Type VARCHAR(20),
  River VARCHAR(35),
  Coordinates GeoCoord CONSTRAINT LakeCoord
      CHECK (((Coordinates).Longitude >= -180) AND
@@ -216,7 +216,7 @@ CREATE TABLE geo_Mountain
 (Mountain VARCHAR(35)
    REFERENCES Mountain DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GMountainKey PRIMARY KEY (Province,Country,Mountain),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -225,7 +225,7 @@ CREATE TABLE geo_Desert
 (Desert VARCHAR(35)
    REFERENCES Desert DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GDesertKey PRIMARY KEY (Province, Country, Desert),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -234,7 +234,7 @@ CREATE TABLE geo_Island
 (Island VARCHAR(35)
    REFERENCES Island DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GIslandKey PRIMARY KEY (Province, Country, Island),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -243,7 +243,7 @@ CREATE TABLE geo_River
 (River VARCHAR(35)
    REFERENCES River DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GRiverKey PRIMARY KEY (Province ,Country, River),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -252,7 +252,7 @@ CREATE TABLE geo_Sea
 (Sea VARCHAR(35)
    REFERENCES Sea DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4)  ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GSeaKey PRIMARY KEY (Province, Country, Sea),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -261,7 +261,7 @@ CREATE TABLE geo_Lake
 (Lake VARCHAR(35)
    REFERENCES Lake DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GLakeKey PRIMARY KEY (Province, Country, Lake),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -270,7 +270,7 @@ CREATE TABLE geo_Source
 (River VARCHAR(35)
    REFERENCES River DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GSourceKey PRIMARY KEY (Province, Country, River),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -279,7 +279,7 @@ CREATE TABLE geo_Estuary
 (River VARCHAR(35)
    REFERENCES River DEFERRABLE INITIALLY DEFERRED,
  Country VARCHAR(4) ,
- Province VARCHAR(35) ,
+ Province VARCHAR(50) ,
  CONSTRAINT GEstuaryKey PRIMARY KEY (Province, Country, River),
  CONSTRAINT Province_FKey FOREIGN KEY (Province, Country)
    REFERENCES Province(Name, Country) DEFERRABLE INITIALLY DEFERRED);
@@ -292,8 +292,8 @@ CREATE TABLE mergesWith
  CONSTRAINT MergesWithKey PRIMARY KEY (Sea1, Sea2) );
 
 CREATE TABLE located
-(City VARCHAR(35) ,
- Province VARCHAR(35) ,
+(City VARCHAR(50) ,
+ Province VARCHAR(50) ,
  Country VARCHAR(4) ,
  River VARCHAR(35)
    REFERENCES River DEFERRABLE INITIALLY DEFERRED,
@@ -308,8 +308,8 @@ CREATE TABLE located
  CONSTRAINT located_U_Sea UNIQUE (City, Country, Province, Sea));
 
 CREATE TABLE locatedOn
-(City VARCHAR(35) ,
- Province VARCHAR(35) ,
+(City VARCHAR(50) ,
+ Province VARCHAR(50) ,
  Country VARCHAR(4) ,
  Island VARCHAR(35)
    REFERENCES Island DEFERRABLE INITIALLY DEFERRED,
