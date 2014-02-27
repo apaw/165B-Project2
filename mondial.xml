@@ -41741,8 +41741,8 @@
    <mountain id="mount-LiushiShan" country="CN">
       <name>Liushi Shan</name>
       <mountains>Kunlun</mountains>
-      <located country="CN" province="prov-China-28"/>
-      <located country="CN" province="prov-China-29"/>
+      <located country="CN" province="prov-China-28 prov-China-29"/>
+      <!-- <located country="CN" province="prov-China-29"/> -->
       <elevation>7167</elevation>
       <longitude>80.9</longitude>
       <latitude>35.3</latitude>
@@ -41750,8 +41750,8 @@
    <mountain id="mount-UlugMuztag" country="CN">
       <name>Ulug Muztag</name>
       <mountains>Kunlun</mountains>
-      <located country="CN" province="prov-China-28"/>
-      <located country="CN" province="prov-China-29"/>
+      <located country="CN" province="prov-China-28 prov-China-29"/>
+      <!-- <located country="CN" province="prov-China-29"/> -->
       <elevation>6973</elevation>
       <longitude>87.4</longitude>
       <latitude>36.4</latitude>

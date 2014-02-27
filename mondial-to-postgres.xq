@@ -753,7 +753,53 @@ for $i in $f/mondial/island
 		$lake, $comma,
 		$riv, $closing, $nl)
 
+,
 
+(: Generating inserts into geo_island :)
+
+for $island in doc($file)/mondial/island
+        let $name := $island/name
+for $cid in $island/tokenize(@country, '\s+')
+        let $country := doc($file)//country[@car_code = $cid]/name
+        let $provids := $island/located[@country = $cid]/@province
+        return
+        if(string-length($provids) = 0) then
+                concat("INSERT INTO geo_island VALUES (",
+                $quote, $name, $quote, $comma,
+                $quote, $cid, $quote, $comma,
+                $quote, $country, $quote, $closing, $nl)
+        else
+        let $provid := tokenize($provids, '\s+')
+for $p in $provid
+        let $province := doc($file)//province[@id = $p]/name
+        return concat("INSERT INTO geo_island VALUES (",
+     $quote, $name, $quote, $comma,
+     $quote, $cid, $quote, $comma,
+     $quote, $province, $quote, $closing, $nl)
+
+,
+
+(: Generating inserts into geo_mountain :)
+
+for $mountain in doc($file)/mondial/mountain
+        let $name := $mountain/name
+for $cid in $mountain/tokenize(@country, '\s+')
+        let $country := doc($file)//country[@car_code = $cid]/name
+        let $provids := $mountain/located[@country = $cid]/@province
+        return
+        if(string-length($provids) = 0) then
+                concat("INSERT INTO geo_mountain VALUES (",
+                $quote, $name, $quote, $comma,
+                $quote, $cid, $quote, $comma,
+                $quote, $country, $quote, $closing, $nl)
+        else
+        let $provid := tokenize($provids, '\s+')
+	for $p in $provid
+        	let $province := doc($file)//province[@id = $p]/name
+        	return concat("INSERT INTO geo_mountain VALUES (",
+     		$quote, $name, $quote, $comma,
+     		$quote, $cid, $quote, $comma,
+    		$quote, $province, $quote, $closing, $nl)
 
 ,
 
