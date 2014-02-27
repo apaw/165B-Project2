@@ -214,11 +214,11 @@ return concat("INSERT INTO religion VALUES (",
 
 (: Generating inserts into ethic group table :)
 
-for $e in doc($file)/mondial/country/ethicgroups
+for $e in doc($file)/mondial/country/ethnicgroups
         let $country := $e/../data(@car_code)
         let $name := $e/text()
         let $percentage := $e/data(@percentage)
-return concat("INSERT INTO ethicgroup VALUES (",
+return concat("INSERT INTO ethnicgroup VALUES (",
         $quote, $country, $quote, $comma, 
 	$quote, $name, $quote, $comma,
         $percentage, $closing, $nl)
